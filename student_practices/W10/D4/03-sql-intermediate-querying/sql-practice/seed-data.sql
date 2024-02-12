@@ -1,3 +1,4 @@
+.mode box
 DROP TABLE IF EXISTS albums;
 CREATE TABLE albums (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -21,3 +22,5 @@ VALUES ('The Falling Box', 1, 2015, 25000),
   ('Under Water', 5, 2020, 106000),
   ('Another Fork', 5, 2021, 140000);
   
+  SELECT * FROM albums ORDER BY num_sold DESC;
+  SELECT * FROM albums ORDER BY num_sold DESC LIMIT 2 OFFSET 2;
