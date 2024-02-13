@@ -36,6 +36,11 @@ migration. Name the model `Color` and define a `name` attribute of type
 When this step is completed you should see two files created, a migration file
 in the __migrations__ directory and a model file in the __models__ directory.
 
+```
+answer:
+npx sequelize model:generate --name Color --attributes name:string
+```
+
 ## Step 2: Modify the migration file
 
 In the migration file that was created, double check that the `createTable`
@@ -54,6 +59,11 @@ Keys should be added to `createdAt` and `updatedAt` to assign default values.
 Utilize the `Sequelize.literal("CURRENT_TIMESTAMP")` function for each of these
 attributes. This function evaluates the SQL string passed in, which will allow
 you to tell **Sequelize** to use the current time.
+
+```
+after modifying color.js...
+npx dotenv sequelize db:migrate
+```
 
 ## Step 3: Modify the model file
 
@@ -149,6 +159,12 @@ CREATE TABLE `Colors` (
 
 You can test the bonus by running `npm test test/bonus/02-isPrimary-spec.js`
 from the __server__ directory.
+
+```
+npx dotenv sequelize db:migrate:undo
+then, in migrations, set isPrimary to an object (see in file)
+add isPrimary to model in color.js
+```
 
 ## Congratulations!
 
