@@ -19,9 +19,9 @@ app.use(express.json());
 // All puppies in the database
 // No WHERE clause
 app.get('/puppies', async (req, res, next) => {
-    let allPuppies;
-
-    // Your code here 
+    let allPuppies = await Puppy.findAll({
+        order: [['name']]
+    });
 
     res.json(allPuppies);
 });
@@ -31,9 +31,10 @@ app.get('/puppies', async (req, res, next) => {
 // All puppies that have been microchipped
 // WHERE clause with one exact value
 app.get('/puppies/chipped', async (req, res, next) => {
-    let chippedPuppies;
-
-    // Your code here 
+    let chippedPuppies = await Puppy.findAll({
+        where: { microchipped: true },
+        order: [['ageYrs', 'DESC'], ['name']]
+    })
 
     res.json(chippedPuppies);
 });
@@ -43,9 +44,10 @@ app.get('/puppies/chipped', async (req, res, next) => {
 // One puppy matching a name param
 // Finding one record by attribute
 app.get('/puppies/name/:name', async (req, res, next) => {
-    let puppyByName;
-    
-    // Your code here 
+    let puppyName = req.params.name;
+    let puppyByName = await Puppy.findOne({
+        where: {name: puppyName}
+    })
 
     res.json(puppyByName);
 })
@@ -55,7 +57,9 @@ app.get('/puppies/name/:name', async (req, res, next) => {
 // All puppies with breed ending in 'Shepherd'
 // WHERE clause with a comparison
 app.get('/puppies/shepherds', async (req, res, next) => {
-    let shepherds;
+    let shepherds = await Puppy.findAll({
+        where: {  }
+    })
     
     // Your code here 
 
@@ -79,9 +83,8 @@ app.get('/puppies/tinybabies', async (req, res, next) => {
 // One puppy matching an id param
 // Finding one record by primary key
 app.get('/puppies/:id', async (req, res, next) => {
-    let puppyById;
-    
-    // Your code here 
+    const puppyId = req.params.id;
+    let puppyById = await Puppy.findByPk(puppyId);
     
     res.json(puppyById);
 });
