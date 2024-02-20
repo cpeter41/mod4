@@ -1,24 +1,81 @@
 // Instantiate Express and the application - DO NOT MODIFY
-const express = require('express');
+const express = require("express");
 const app = express();
 
 // Import environment variables in order to connect to database - DO NOT MODIFY
-require('dotenv').config();
-require('express-async-errors');
+require("dotenv").config();
+require("express-async-errors");
 
 // Import the models used in these routes - DO NOT MODIFY
-const { Band, Musician, Instrument } = require('./db/models');
-const { Op } = require('sequelize');
+const { Band, Musician, Instrument } = require("./db/models");
+const { Op } = require("sequelize");
 
 // Express using json - DO NOT MODIFY
 app.use(express.json());
 
+// ------------------------- EXAMPLE FOR SEARCH -------------------------
+app.get("/search", async (req, res, next) => {
+    const { title, maxLength, album } = req.query;
 
-app.get('/musicians', async (req, res, next) => {
+    const queryObj = {
+        where: {},
+        include: [],
+    };
+
+    // let tracks;
+
+    if (title) {
+        // tracks = await Track.findAll({
+        //     where: {
+        //         name: {
+        //             [Op.substring]: title,
+        //         },
+        //     },
+        // });
+        queryObj.where.name = {
+            [Op.substring]: title,
+        };
+    }
+
+    if (maxLength) {
+        // tracks = await Track.findAll({
+        //     where: {
+        //         duration: {
+        //             [Op.lte]: maxLength,
+        //         },
+        //     },
+        // });
+        queryObj.where.duration = {
+            [Op.lte]: maxLength,
+        };
+    }
+
+    if (album) {
+        // tracks = await Track.findAll({
+        //     include: {
+        //         model: Album,
+        //         where: { name: album },
+        //     },
+        // });
+        // queryObj.include
+        queryObj.include.push({
+            model: Album,
+            where: {
+                name: album,
+            },
+        });
+    }
+    const tracks = await Album.findAll({ queryObj });
+
+    res.json(tracks);
+});
+// --------------------------- END OF EXAMPLE ---------------------------
+
+app.get("/musicians", async (req, res, next) => {
     // Establish base query object to be built up
     let query = {
         where: {},
-        include: []
+        include: [],
     };
 
     // Pagination Options
@@ -31,37 +88,44 @@ app.get('/musicians', async (req, res, next) => {
         query.limit = size;
         query.offset = size * (page - 1);
     }
-    
+
+    let { firstName, lastName, bandName, instrumentTypes } = req.query;
 
     // STEP 1: WHERE clauses on the Musician model
     // ?firstName=XX&lastName=YY
     // Add keys to the WHERE clause to match the firstName param, if it exists.
     // End result: { where: { firstName: req.query.firstName } }
 
-    // Your code here 
-    
+    // Your code here
+    if (firstName) query.where.firstName = firstName;
+
     // Add keys to the WHERE clause to match the lastName param, if it exists.
     // End result: { where: { lastName: req.query.lastName } }
-    
-    // Your code here 
 
+    // Your code here
+    if (lastName) query.where.lastName = lastName;
 
     // STEP 2: WHERE clauses on the associated Band model
     // ?bandName=XX
-    // Add an object to the `include` array to include the Band model where the 
+    // Add an object to the `include` array to include the Band model where the
     // name matches the bandName param, if it exists.
     // End result: { include: [{ model: Band, where: { name: req.query.bandName } }] }
 
-    // Your code here 
+    // Your code here
+    if (bandName) {
+        query.include.push({
+            model: Band,
+            where: { name: bandName },
+        });
+    }
 
-
-    // STEP 3: WHERE Clauses on the associated Instrument model 
+    // STEP 3: WHERE Clauses on the associated Instrument model
     // ?instrumentTypes[]=XX&instrumentTypes[]=YY
-    // Add an object to the `include` array to include the Instrument model 
-    // where the type matches any value in the instrumentTypes param array, if it 
-    // exists. Do not include any attributes from the join table 
+    // Add an object to the `include` array to include the Instrument model
+    // where the type matches any value in the instrumentTypes param array, if it
+    // exists. Do not include any attributes from the join table
     // MusicianInstruments.
-    // End result: 
+    // End result:
     /* { 
         include: [{ 
             model: Instrument, 
@@ -70,23 +134,28 @@ app.get('/musicians', async (req, res, next) => {
         }] } 
     */
 
-    // Your code here 
-
+    // Your code here
+    if (instrumentTypes) {
+        query.include.push({
+            model: Instrument,
+            where: { type: instrumentTypes },
+            through: { attributes: [] }
+        })
+    }
 
     // BONUS STEP 4: Specify Musician attributes to be returned
     // ?&musicianFields[]=XX&musicianFields[]=YY
-    // Add a key to the query object that will limit the Musician attributes 
-    // returned to those specified by the query param musicianFields, if it 
+    // Add a key to the query object that will limit the Musician attributes
+    // returned to those specified by the query param musicianFields, if it
     // exists
     // If keyword 'all' is used, do not specify any specific attributes
     // If keyword 'none' is used, do not include any Musician attributes
     // If any other attributes are provided, only include those values
 
-    // Your code here 
-
+    // Your code here
 
     // BONUS STEP 5: Specify attributes to be returned
-    // These additions should be included in your previously implemented 
+    // These additions should be included in your previously implemented
     // associations, STEPS 2 and 3 above.
     // ?bandFields[]=XX&bandFields[]=YY
     // ?instrumentFields[]=XX&instrumentFields[]=YY
@@ -105,37 +174,34 @@ app.get('/musicians', async (req, res, next) => {
         }
     */
 
-
     // BONUS STEP 6: Order Options
     // ?order[]=XX,xx&order[]=YY&order[]=ZZ,zz
-    // Add a key to the query object that will order the results by the Musician 
+    // Add a key to the query object that will order the results by the Musician
     // attributes specified by the order query param, if it exists.
-    // If the order param does not exist, a default order of lastName, then 
+    // If the order param does not exist, a default order of lastName, then
     // firstName should be used.
     // The order param takes the form of an array of strings.
-    // The strings may include a `,` to separate the attribute from an 
-    // `ASC`/`DESC` indication. If the indicator is not present, it is assumed a 
+    // The strings may include a `,` to separate the attribute from an
+    // `ASC`/`DESC` indication. If the indicator is not present, it is assumed a
     // default `ASC` order and does not need to be included.
     // Example: ?order[]=firstName,asc&order[]=lastName&order[]=createdAt,desc
     // End result: { order: [['firstName', 'asc'], ['lastName'], ['createdAt', 'desc']] }
 
-    // Your code here 
-
+    // Your code here
 
     // Perform compiled query
     const musicians = await Musician.findAndCountAll(query);
 
-    res.json(musicians)
+    res.json(musicians);
 });
 
-
 // Root route - DO NOT MODIFY
-app.get('/', (req, res) => {
+app.get("/", (req, res) => {
     res.json({
-        message: "API server is running"
+        message: "API server is running",
     });
 });
 
 // Set port and listen for incoming requests - DO NOT MODIFY
 const port = 5000;
-app.listen(port, () => console.log('Server is listening on port', port));
+app.listen(port, () => console.log("Server is listening on port", port));
