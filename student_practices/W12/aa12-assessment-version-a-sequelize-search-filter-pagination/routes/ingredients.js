@@ -9,11 +9,11 @@ router.get('/', async (req, res) => {
   page = parseInt(page);
   size = parseInt(size);
 
-  if (Number.isNaN(page)) page = 1;
-  if (Number.isNaN(size)) size = 4;
+  if (Number.isNaN(page) || page <= 0) page = 1;
+  if (Number.isNaN(size) || size <= 0) size = 4;
 
   const ingredients = await Ingredient.findAll({
-    limit: page,
+    limit: size,
     offset: size * (page - 1),
   });
 
